@@ -25,6 +25,8 @@
 
 ### 🐳 Docker 部署（推荐）
 
+#### 启动服务
+
 ```bash
 # 1. 复制配置文件
 cp .env.example .env
@@ -36,7 +38,45 @@ docker-compose up -d
 docker-compose ps
 
 # 4. 查看日志
-docker-compose logs -f
+docker-compose logs -f qwen-service
+```
+
+#### Docker 管理命令
+
+```bash
+# 停止服务
+docker-compose stop
+
+# 重启服务
+docker-compose restart
+
+# 停止并删除容器
+docker-compose down
+
+# 查看特定服务日志
+docker-compose logs -f qwen-service    # Qwen 服务日志
+docker-compose logs -f llama-cpp       # llama.cpp 日志
+
+# 重新构建并启动
+docker-compose up -d --build
+
+# 进入容器
+docker exec -it qwen-ai-service sh
+```
+
+#### 验证服务
+
+```bash
+# 检查健康状态
+curl http://localhost:8000/api/health
+
+# 查看模型列表
+curl http://localhost:8000/v1/models
+
+# 测试聊天
+curl -X POST http://localhost:8000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"qwen","messages":[{"role":"user","content":"Hello!"}]}'
 ```
 
 **配置 Chatbox**：

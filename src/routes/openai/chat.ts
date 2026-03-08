@@ -66,20 +66,33 @@ export async function chatRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // Models list
-  fastify.get('/v1/models', async () => {
+  // Models list - supports both OpenAI and Anthropic formats
+  fastify.get('/v1/models', async (request) => {
     const llamaClient = getLlamaClient();
     const llamaResponse = await llamaClient.getModels();
 
-    // Transform to OpenAI format
-    return {
-      object: 'list',
-      data: llamaResponse.data.map((model: any) => ({
+    // Check if this is an Anthropic client request
+    const isAnthropic = request.headers['anthropic-version'];
+
+    if (isAnthropic) {
+      // Return Anthropic format
+      return llamaResponse.data.map((model: any) => ({
         id: model.id,
-        object: 'model',
-        created: model.created,
-        owned_by: model.owned_by,
-      })),
-    };
+        name: model.id,
+        size: model.meta?.size || 0,
+        displayName: model.id,
+      }));
+    } else {
+      // Return OpenAI format
+      return {
+        object: 'list',
+        data: llamaResponse.data.map((model: any) => ({
+          id: model.id,
+          object: 'model',
+          created: model.created,
+          owned_by: model.owned_by,
+        })),
+      };
+    }
   });
 }
