@@ -1,0 +1,36 @@
+[Unit]
+Description=Qwen AI Service - Multi-protocol AI model service
+Documentation=https://github.com/yourusername/qwen-ai-service
+After=network.target llama-cpp.service
+
+[Service]
+Type=simple
+User=qwen
+Group=qwen
+WorkingDirectory=/opt/qwen-ai-service
+ExecStart=/usr/bin/node dist/server.js
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=qwen-ai-service
+
+# Environment
+Environment="NODE_ENV=production"
+Environment="PORT=8000"
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/qwen-ai-service/logs
+ReadWritePaths=/opt/qwen-ai-service/config
+
+# Resource limits
+LimitNOFILE=65536
+MemoryMax=2G
+
+[Install]
+WantedBy=multi-user.target

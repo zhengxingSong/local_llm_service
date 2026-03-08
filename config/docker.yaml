@@ -1,0 +1,58 @@
+# Qwen AI Service - Docker Configuration
+# This config overrides values in default.yaml when running in Docker
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  cors:
+    origin: "*"
+    credentials: true
+
+# llama.cpp service name from Docker network
+llama:
+  baseUrl: "${LLAMA_BASE_URL:-http://llama-cpp:8001}"
+  timeout: 300000
+  maxRetries: 3
+  retryDelay: 1000
+
+models:
+  directory: "${MODELS_DIRECTORY:-/app/models}"
+  default: "${LLAMA_MODEL:-Qwen3.5-9B-Q4_K_M.gguf}"
+  autoUnload: false
+  preload: []
+
+logging:
+  level: "${LOG_LEVEL:-info}"
+  file: "${LOG_FILE:-/app/logs/service.log}"
+  console: true
+  maxSize: "100M"
+  maxFiles: 10
+  datePattern: "YYYY-MM-DD"
+
+multimodal:
+  enabled: true
+  image:
+    maxSize: 10485760
+    maxWidth: 2048
+    maxHeight: 2048
+    allowedFormats:
+      - image/jpeg
+      - image/png
+      - image/webp
+      - image/gif
+    timeout: 30000
+
+security:
+  apiKey:
+    enabled: false
+    header: "x-api-key"
+    keys: []
+  rateLimit:
+    enabled: true
+    requestsPerMinute: 60
+    burst: 100
+
+performance:
+  concurrentLimit: 5
+  queueSize: 100
+  timeout: 120000

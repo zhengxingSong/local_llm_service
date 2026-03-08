@@ -1,0 +1,41 @@
+FROM nvidia/cuda:12.3.0-runtime-ubuntu22.04
+
+# Install dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app directory and models directory
+WORKDIR /llama.cpp
+RUN mkdir -p /models
+
+# Create non-root user
+RUN useradd -m -u 1001 llama && \
+    chown -R llama:llama /llama.cpp /models
+
+USER llama
+
+# Expose llama.cpp port
+EXPOSE 8001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8001/health || exit 1
+
+# Note: Copy your local llama.cpp server binary to this directory
+# Build llama.cpp locally and place the 'server' binary in ./docker/
+# Then use: COPY --chown=llama:llama server /llama.cpp/server
+
+# Set working directory
+WORKDIR /llama.cpp
+
+# Start llama.cpp server with defaults
+# Override these in docker-compose.yml or environment variables
+CMD ["./server", \
+     "--host", "0.0.0.0", \
+     "--port", "8001", \
+     "--models", "/models", \
+     "--ctx-size", "8192", \
+     "--threads", "4", \
+     "--n-gpu-layers", "35"]

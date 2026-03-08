@@ -1,0 +1,94 @@
+services:
+  # ============================================
+  # Qwen AI Service
+  # ============================================
+  qwen-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qwen-ai-service
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT:-8000}:8000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=8000
+      - HOST=0.0.0.0
+      - LLAMA_BASE_URL=http://llama-cpp:8001
+      - WAIT_FOR_LLAMA=true
+      - WAIT_FOR_LLAMA_TIMEOUT=60
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - MODELS_DIRECTORY=/app/models
+    volumes:
+      # Mount models directory (read-only for security)
+      - ${MODELS_PATH:-./models}:/app/models:ro
+      # Mount logs directory (writeable)
+      - ./logs:/app/logs
+      # Mount custom config (optional)
+      - ./config:/app/config:ro
+    networks:
+      - qwen-network
+    depends_on:
+      llama-cpp:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+    labels:
+      - "com.qwen.service.description=Qwen AI Service"
+      - "com.qwen.service.version=1.0.0"
+
+  # ============================================
+  # llama.cpp Backend with GPU Support
+  # Using official CUDA-enabled image from llama.cpp
+  # ============================================
+  llama-cpp:
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    container_name: llama-cpp-server
+    restart: unless-stopped
+    ports:
+      - "${LLAMA_PORT:-8001}:8001"
+    command: ["--host", "0.0.0.0", "--port", "8001", "--model", "/models/${LLAMA_MODEL:-Qwen3.5-9B-Q4_K_M.gguf}", "--ctx-size", "8192", "--threads", "4", "--n-gpu-layers", "35"]
+    environment:
+      - LLAMA_MODEL=${LLAMA_MODEL:-Qwen3.5-9B-Q4_K_M.gguf}
+    volumes:
+      # Mount models directory
+      - ${MODELS_PATH:-./models}:/models:ro
+    networks:
+      - qwen-network
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'
+          memory: 16G
+        reservations:
+          cpus: '4.0'
+          memory: 8G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8001/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "com.qwen.service.description=llama.cpp Backend"
+
+networks:
+  qwen-network:
+    name: qwen-network
+    driver: bridge

@@ -1,0 +1,70 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+yarn.lock
+pnpm-lock.yaml
+
+# Build output
+dist
+*.tsbuildinfo
+
+# Logs
+logs
+*.log
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Docs
+docs
+*.md
+!README.md
+
+# Tests
+test
+*.test.ts
+*.spec.ts
+coverage
+.nyc_output
+
+# Scripts
+scripts
+*.bat
+*.ps1
+
+# Misc
+*.tmp
+*.temp
+nul
+.editorconfig
+.prettierrc
+.eslintrc
+.eslintrc.js
+.prettierrc.js
+
+# Claude
+.claude
